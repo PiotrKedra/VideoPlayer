@@ -1,4 +1,4 @@
-package Player;
+package Functionality;
 
 
 import javafx.event.ActionEvent;
@@ -10,13 +10,14 @@ public class PlayOrPauseButton extends Button {
     private String stance = "Play";
     MediaPlayer player;
 
-    PlayOrPauseButton(final MediaPlayer _player){
+    public PlayOrPauseButton(final MediaPlayer _player){
         super();
         player = _player;
         setText(stance);
         setLayoutX(30);
         setLayoutY(0);
         setMinSize(50,10);
+        setStyle("-fx-focus-color: transparent;");
         setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -25,7 +26,7 @@ public class PlayOrPauseButton extends Button {
         });
     }
 
-    private void changeStance(){
+    public void changeStance(){
         if(stance.equals("Play")){
             stance = "Pause";
             player.pause();

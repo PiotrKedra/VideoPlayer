@@ -1,4 +1,4 @@
-package Player;
+package Functionality;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -27,6 +27,7 @@ public class ScrolingButton extends Button {
         }
         setMinSize(30,10);
         //setMaxSize(28,10);
+        setStyle("-fx-focus-color: transparent;");
         setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -35,7 +36,7 @@ public class ScrolingButton extends Button {
         });
     }
 
-    private void scrol(){
+    public void scrol(){
         Duration currentTime = player.getCurrentTime();
         System.out.println(currentTime);
         currentTime = currentTime.add(new Duration(millis));

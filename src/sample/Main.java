@@ -12,7 +12,6 @@ import javafx.scene.media.MediaView;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
-/*
 public class Main extends Application {
 
     @Override
@@ -36,9 +35,8 @@ public class Main extends Application {
         launch(args);
     }
 }
-*/
 
-public class Main extends Application{
+/*public class Main extends Application{
 
     StackPane stack = new StackPane();
 
@@ -63,4 +61,4 @@ public class Main extends Application{
         Application.launch();
     }
 
-}
+}*/
