@@ -48,8 +48,6 @@ public class VideoPlayer extends Application {
         BorderPane root = new BorderPane(mediaView);
 
 
-
-
         PlayOrPauseButton playOrPauseButton = new PlayOrPauseButton(player);
         ScrolingButton scrolingForwardButton = new ScrolingButton(player, 5000);
         ScrolingButton scrolingBackwardButton = new ScrolingButton(player, -5000);
@@ -97,7 +95,7 @@ public class VideoPlayer extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
 
-        new Server(playOrPauseButton).start();
+        new Server(playOrPauseButton,scrolingForwardButton,scrolingBackwardButton).start();
 
     }
 

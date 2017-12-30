@@ -1,6 +1,7 @@
 package Comunication;
 
 import Functionality.PlayOrPauseButton;
+import Functionality.ScrolingButton;
 import javafx.scene.media.MediaPlayer;
 
 import java.io.BufferedReader;
@@ -12,9 +13,14 @@ import java.net.Socket;
 
 public class Server extends Thread {
     PlayOrPauseButton playOrPauseButton;
-    public Server(PlayOrPauseButton playOrPauseButton){
+    ScrolingButton scrolForwardButton;
+    ScrolingButton scrolBackwardButton;
+
+    public Server(PlayOrPauseButton playOrPauseButton, ScrolingButton scrolForwardButton, ScrolingButton scrolBackwardButton){
         super();
         this.playOrPauseButton=playOrPauseButton;
+        this.scrolBackwardButton=scrolBackwardButton;
+        this.scrolForwardButton=scrolForwardButton;
     }
     public void run() {
         ServerSocket serverSocket = null;
@@ -44,6 +50,12 @@ public class Server extends Thread {
                 System.out.println(inputLine);
                 if(inputLine.equals("1")){
                     playOrPauseButton.changeStance();
+                }
+                if(inputLine.equals("2")){
+                    scrolForwardButton.scrol();
+                }
+                if(inputLine.equals("3")){
+                    scrolBackwardButton.scrol();
                 }
             }
             out.close();

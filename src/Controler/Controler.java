@@ -1,5 +1,6 @@
 package Controler;
 
+import Comunication.ClientControler;
 import Functionality.PlayOrPauseButton;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
@@ -23,13 +24,28 @@ public class Controler extends Application {
         Button scrolForward = new Button();
         Button scrolBackward = new Button();
         playOrPause.setText("Play/Pause");
-        scrolBackward.setText("-5s");
-        scrolForward.setText("+5s");
+        scrolBackward.setText("-5sec");
+        scrolForward.setText("+5sec");
+
+        ClientControler clientControler=new ClientControler();
 
         playOrPause.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-
+                clientControler.setPlayOrPause();
+                System.out.println("hohohhohohohohohohohohohoohohoh");
+            }
+        });
+        scrolBackward.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                clientControler.setScrolBackward();
+            }
+        });
+        scrolForward.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                clientControler.setScrolForward();
             }
         });
 
@@ -41,6 +57,8 @@ public class Controler extends Application {
         primaryStage.setTitle("Controller");
         primaryStage.setScene(scene);
         primaryStage.show();
+
+        clientControler.start();
     }
 
     public static void main(String[] args) {
