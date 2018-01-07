@@ -1,25 +1,39 @@
 package Player;
 
 import Comunication.Server;
+import Functionality.FullScreenButton;
+import Functionality.MainMenu;
 import Functionality.PlayOrPauseButton;
 import Functionality.ScrolingButton;
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 import java.io.File;
+import java.io.IOException;
+
 
 public class VideoPlayer extends Application {
 
@@ -28,35 +42,56 @@ public class VideoPlayer extends Application {
     private long currentTime = 0;
     private boolean fullScreen=false;
     private boolean isPlaing=true;
+    private Server server;
+    private boolean isWorking = true;
+
+    private Stage stage;
+    private Scene scene;
+    private DoubleProperty width;
+    private DoubleProperty height;
+
+    private BorderPane root;
+    private MainMenu menu;
+
+    public PlayOrPauseButton playOrPauseButton;
+    ScrolingButton scrolingForwardButton;
+    ScrolingButton scrolingBackwardButton;
+
+    //player
+    private File file;
+    private String MEDIA_URL;
+    private Media media;
+    private MediaPlayer player;
+    private MediaView mediaView;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        stage=primaryStage;
 
-        final File file = new File("C:\\Users\\piotr\\Desktop\\sampleVideo.mp4");
-        final String MEDIA_URL = file.toURI().toString();
-        final Media media = new Media(MEDIA_URL);
-        final MediaPlayer player = new MediaPlayer(media);
-        MediaView mediaView = new MediaView(player);
+        width = new SimpleDoubleProperty();
+        height=new SimpleDoubleProperty();
 
-        DoubleProperty width = mediaView.fitWidthProperty();
-        DoubleProperty height = mediaView.fitHeightProperty();
-        width.bind(Bindings.selectDouble(mediaView.sceneProperty(), "width"));
-        height.bind(Bindings.selectDouble(mediaView.sceneProperty(), "height"));
+        /*file = new File("C:\\Users\\piotr\\Desktop\\tgt.mp4");
+        MEDIA_URL = file.toURI().toString();
+        media = new Media(MEDIA_URL);
+        player = new MediaPlayer(media);
+        mediaView = new MediaView(player);
+        player.setAutoPlay(true);*/
 
-        player.setAutoPlay(true);
+        root = new BorderPane();
+        root.setStyle("-fx-background-color: #000000;");
 
-        BorderPane root = new BorderPane(mediaView);
+        playOrPauseButton = new PlayOrPauseButton(player);
+        scrolingForwardButton = new ScrolingButton(player, 5000);
+        scrolingBackwardButton = new ScrolingButton(player, -5000);
+        FullScreenButton fullScreenButton=new FullScreenButton(stage,root,menu);
 
+        menu = new MainMenu();
+        menu.getChildren().addAll(scrolingBackwardButton,playOrPauseButton,scrolingForwardButton,fullScreenButton);
+        root.setRight(menu);
 
-        PlayOrPauseButton playOrPauseButton = new PlayOrPauseButton(player);
-        ScrolingButton scrolingForwardButton = new ScrolingButton(player, 5000);
-        ScrolingButton scrolingBackwardButton = new ScrolingButton(player, -5000);
-
-        /*root.getChildren().add(playOrPauseButton);
-        root.getChildren().add(scrolingForwardButton);
-        root.getChildren().add(scrolingBackwardButton);*/
-
-        Scene scene = new Scene(root,width.doubleValue(),height.doubleValue());
+        //setting up scene event handler ...
+        scene = new Scene(root,width.doubleValue(),height.doubleValue());
         scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
@@ -76,13 +111,14 @@ public class VideoPlayer extends Application {
         scene.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                System.out.println(System.currentTimeMillis());
                 if((System.currentTimeMillis()-lastTimeClik)<=500) {
                     playOrPauseButton.changeStance();
-                    mouseCliks = 0;
-                    System.out.println("we in home");
-                    fullScreen = !fullScreen;
-                    primaryStage.setFullScreen(fullScreen);
+                    if(!primaryStage.isFullScreen()) {
+                        root.setRight(null);
+                    }else {
+                        root.setRight(menu);
+                    }
+                    primaryStage.setFullScreen(!primaryStage.isFullScreen());
                 }else {
                     playOrPauseButton.changeStance();
                     System.out.println("one clikc");
@@ -91,12 +127,26 @@ public class VideoPlayer extends Application {
 
             }
         });
-        primaryStage.setTitle(file.getName());
+
+        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent event) {
+                try {
+                    server.setExit();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        primaryStage.setTitle("VideoPlayer");
+        primaryStage.setMinWidth(500);
+        primaryStage.setMinHeight(300);
         primaryStage.setScene(scene);
         primaryStage.show();
 
-        new Server(playOrPauseButton,scrolingForwardButton,scrolingBackwardButton).start();
-
+        //running background server
+        server = new Server(playOrPauseButton,scrolingForwardButton,scrolingBackwardButton,this);
+        new Thread(server).start();
     }
 
     public static void main(String[] args) {
@@ -107,4 +157,34 @@ public class VideoPlayer extends Application {
         Application.launch();
     }
 
+    public void setFullScreen(){
+        stage.setFullScreen(!stage.isFullScreen());
+    }
+
+    public void setPlayer(String path){
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(path);
+                file = new File(path);
+                MEDIA_URL = file.toURI().toString();
+                media = new Media(MEDIA_URL);
+                player = new MediaPlayer(media);
+                playOrPauseButton.reset(player);
+                scrolingBackwardButton.reset(player);
+                scrolingForwardButton.reset(player);
+                player.setAutoPlay(true);
+                mediaView = new MediaView(player);
+
+                //resaizing properly media view
+                width = mediaView.fitWidthProperty();
+                height = mediaView.fitHeightProperty();
+                width.bind(Bindings.selectDouble(mediaView.sceneProperty(), "width"));
+                height.bind(Bindings.selectDouble(mediaView.sceneProperty(), "height"));
+
+                root.setCenter(mediaView);
+            }
+        });
+
+    }
 }

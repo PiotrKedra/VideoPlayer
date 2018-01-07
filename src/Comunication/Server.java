@@ -2,7 +2,10 @@ package Comunication;
 
 import Functionality.PlayOrPauseButton;
 import Functionality.ScrolingButton;
+import Player.VideoPlayer;
+import javafx.concurrent.Task;
 import javafx.scene.media.MediaPlayer;
+import javafx.stage.Stage;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,18 +15,27 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Server extends Thread {
-    PlayOrPauseButton playOrPauseButton;
-    ScrolingButton scrolForwardButton;
-    ScrolingButton scrolBackwardButton;
+    private boolean isWorking=true;
+    private PlayOrPauseButton playOrPauseButton;
+    private ScrolingButton scrolForwardButton;
+    private ScrolingButton scrolBackwardButton;
+    private VideoPlayer videoPlayer;
 
-    public Server(PlayOrPauseButton playOrPauseButton, ScrolingButton scrolForwardButton, ScrolingButton scrolBackwardButton){
+    //server
+    private ServerSocket serverSocket;
+    private Socket clientSocket;
+    private BufferedReader in;
+
+    public Server(PlayOrPauseButton playOrPauseButton, ScrolingButton scrolForwardButton,
+                  ScrolingButton scrolBackwardButton, VideoPlayer videoPlayer){
         super();
         this.playOrPauseButton=playOrPauseButton;
         this.scrolBackwardButton=scrolBackwardButton;
         this.scrolForwardButton=scrolForwardButton;
+        this.videoPlayer = videoPlayer;
     }
+
     public void run() {
-        ServerSocket serverSocket = null;
         try {
             serverSocket = new ServerSocket(6666);
         } catch (IOException e) {
@@ -31,7 +43,6 @@ public class Server extends Thread {
             System.exit(-1);
         }
 
-        Socket clientSocket = null;
         try {
             clientSocket = serverSocket.accept();
         } catch (IOException e) {
@@ -39,15 +50,13 @@ public class Server extends Thread {
             System.exit(-1);
         }
         try {
-            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(
+            //PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(
                             clientSocket.getInputStream()));
             String inputLine;
 
-            while ((inputLine = in.readLine()) != null) {
-                out.println(inputLine);
-                System.out.println(inputLine);
+            while (isWorking) {
+                inputLine = in.readLine();
                 if(inputLine.equals("1")){
                     playOrPauseButton.changeStance();
                 }
@@ -57,13 +66,30 @@ public class Server extends Thread {
                 if(inputLine.equals("3")){
                     scrolBackwardButton.scrol();
                 }
+                if(inputLine.equals("4")){
+                    videoPlayer.setFullScreen();
+                }
+                if(inputLine.length()>10){
+                    videoPlayer.setPlayer(inputLine);
+                }
             }
-            out.close();
-            in.close();
-            clientSocket.close();
-            serverSocket.close();
+
         }catch (IOException e){
             e.printStackTrace();
         }
     }
+
+    public void setExit() throws IOException {
+        isWorking=false;
+        serverSocket.close();
+        if(clientSocket!=null){
+            clientSocket.close();
+        }
+        if(in!=null){
+            in.close();
+        }
+    }
+
+
+
 }

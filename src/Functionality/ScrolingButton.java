@@ -15,6 +15,7 @@ public class ScrolingButton extends Button {
         this.player = _player;
         millis = _millis;
 
+        setFocusTraversable(false);
         if(millis>0) {
             setLayoutX(80);
             setLayoutY(0);
@@ -25,7 +26,8 @@ public class ScrolingButton extends Button {
             setLayoutY(0);
             setText("-5s");
         }
-        setMinSize(30,10);
+        setPrefSize(50, 25);
+        setMinSize(50,25);
         //setMaxSize(28,10);
         setStyle("-fx-focus-color: transparent;");
         setOnAction(new EventHandler<ActionEvent>() {
@@ -37,12 +39,17 @@ public class ScrolingButton extends Button {
     }
 
     public void scrol(){
-        Duration currentTime = player.getCurrentTime();
-        System.out.println(currentTime);
-        currentTime = currentTime.add(new Duration(millis));
-        System.out.println(currentTime);
-        player.seek(currentTime);
+        if(player!=null) {
+            Duration currentTime = player.getCurrentTime();
+            System.out.println(currentTime);
+            currentTime = currentTime.add(new Duration(millis));
+            System.out.println(currentTime);
+            player.seek(currentTime);
+        }
     }
 
+    public void reset(MediaPlayer player){
+        this.player = player;
+    }
 
 }
